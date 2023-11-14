@@ -16,15 +16,10 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--filter", dest="filter",default='ALL', help=SH.filter)
     parser.add_argument("--no_combine",dest="no_combine",default=0, action='store_true',help=SH.no_combine)
     
-    
-    
-    
     args = parser.parse_args()
 
     ap_size = up.get_aperture_size(args.sn_reg)
     user_ap = ap_size+'_arcsec'
-
-    #check_heasoft()
 
     obj_file_list,tem_file_list=up.interpret_infile(args.infile)
 

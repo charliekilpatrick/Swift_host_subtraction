@@ -515,8 +515,29 @@ def extract_photometry(_phot_file, _ab, _det_limit, _ap_size, _templ_file=None):
 
 def output_mags(_mag,_ap_size):
     user_ap = _ap_size+'_arcsec'
+
     with open(os.path.join('reduction',_ap_size+'_arcsec_photometry.json'),'w') as out:
         out.write(json.dumps(_mag[user_ap], indent = 4))
     
     with open(os.path.join('reduction','5_arcsec_photometry.json'),'w') as out:
         out.write(json.dumps(_mag['5_arcsec'], indent = 4))
+
+    print('5-arcsec output photometry:\n')
+    print('#'*80+'\n\n')
+    _mag['5_arcsec'] = sorted(_mag['5_arcsec'], key=lambda x: x['mjd'])
+    for photom in _mag['5_arcsec']:
+        mjd = photom['mjd']
+        filt = photom['filter']
+        if photom['upper_limit']:
+            mag = photom['mag_limit']
+            magerr = 0.0
+        else:
+            mag = photom['mag']
+            magerr = photom['mag_err']
+
+        mjd = '%.5f'%mjd
+        mag = '%.4f'%mag
+        magerr = '%.4f'%magerr
+
+        print(mjd,filt,mag,magerr)
+
