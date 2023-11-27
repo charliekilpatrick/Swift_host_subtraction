@@ -15,6 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--ab",dest="ab",default=0, action='store_true',help=SH.ab_mag)
     parser.add_argument("-f", "--filter", dest="filter",default='ALL', help=SH.filter)
     parser.add_argument("--no_combine",dest="no_combine",default=0, action='store_true',help=SH.no_combine)
+    parser.add_argument("--obj",dest="obj",default='test',help=SH.obj)
     
     args = parser.parse_args()
 
@@ -83,7 +84,7 @@ if __name__ == "__main__":
         print('\n')
 
 
-    up.output_mags(mag,ap_size)
+    up.output_mags(mag,ap_size,obj=args.obj)
 
 
 

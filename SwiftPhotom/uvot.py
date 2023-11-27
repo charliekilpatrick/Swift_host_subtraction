@@ -243,7 +243,13 @@ def create_product(_flist,_filter,template=0,no_combine=0):
         del hdu
 
     if not template:
-        prod_out_file= os.path.join('reduction',_filter,pf.getheader(file)['OBJECT']+'_'+_filter+'.img')
+        objname = pf.getheader(file)['OBJECT']
+        objname = objname.replace('(','')
+        objname = objname.replace(')','')
+        objname = objname.replace(',','_')
+        objname = objname.replace(' ','_')
+
+        prod_out_file= os.path.join('reduction',_filter,objname+'_'+_filter+'.img')
     else:
         prod_out_file= os.path.join('reduction',_filter,'templ_'+_filter+'.img')
     if os.path.isfile(prod_out_file):
@@ -513,7 +519,7 @@ def extract_photometry(_phot_file, _ab, _det_limit, _ap_size, _templ_file=None):
 
     return mag
 
-def output_mags(_mag,_ap_size):
+def output_mags(_mag,_ap_size,obj=None):
     user_ap = _ap_size+'_arcsec'
 
     with open(os.path.join('reduction',_ap_size+'_arcsec_photometry.json'),'w') as out:
@@ -525,9 +531,20 @@ def output_mags(_mag,_ap_size):
     print('5-arcsec output photometry:\n')
     print('#'*80+'\n\n')
     _mag['5_arcsec'] = sorted(_mag['5_arcsec'], key=lambda x: x['mjd'])
+    mjds = []
+    newdata = []
+    for val in _mag['5_arcsec']:
+        if val['mjd'] not in mjds:
+            mjds.append(val['mjd'])
+            newdata.append(val)
+    _mag['5_arcsec'] = newdata
+
+    if obj:
+        outfile = open(obj+'_Swift.phot','w')
+
     for photom in _mag['5_arcsec']:
         mjd = photom['mjd']
-        filt = photom['filter']
+        filt = photom['filter'].rjust(5)
         if photom['upper_limit']:
             mag = photom['mag_limit']
             magerr = 0.0
@@ -540,4 +557,6 @@ def output_mags(_mag,_ap_size):
         magerr = '%.4f'%magerr
 
         print(mjd,filt,mag,magerr)
+        if obj:
+            outfile.write(f'{mjd} {filt} {mag} {magerr} \n')
 

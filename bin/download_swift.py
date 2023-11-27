@@ -58,6 +58,7 @@ def get_swift_data(ra, dec, radius=30.0 * u.arcmin, discovery_date='2023-10-01',
 
     # Create new row to decide if data are science or template
     discovery_date = Time(discovery_date)
+    max_delta_date = max_delta_date.to(u.day)
     dt = TimeDelta(max_delta_date)
     obs_type = []
     for row in table:
