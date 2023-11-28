@@ -131,6 +131,10 @@ def create_run_files(ra, dec, obstable, outdir='.', phot_radius=5.0 * u.arcsec,
         hdu = fits.open(file)
 
         exptime = hdu[0].header['TSTOP']-hdu[0].header['TSTART']
+        filt = hdu[0].header['FILTER'].strip()
+
+        if filt.upper() not in ['U','B','V','UVW1','UVW2','UVM2','W']:
+            continue
 
         w = wcs.WCS(hdu[1].header)
 
@@ -149,12 +153,12 @@ def create_run_files(ra, dec, obstable, outdir='.', phot_radius=5.0 * u.arcsec,
 
         if obs_type=='science':
             science.write(file+'\n')
-            science_data.append({'filter':hdu[0].header['FILTER'].strip(),
+            science_data.append({'filter':filt,
                 'exptime':exptime,'mjd':Time(hdu[0].header['DATE-OBS']).mjd})
 
         elif obs_type=='template':
             template.write(file+'\n')
-            template_data.append({'filter':hdu[0].header['FILTER'].strip(),
+            template_data.append({'filter':filt,
                 'exptime':exptime,'mjd':Time(hdu[0].header['DATE-OBS']).mjd})
 
     if verbose:
