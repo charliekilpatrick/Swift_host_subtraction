@@ -452,7 +452,7 @@ def extract_photometry(_phot_file, _ab, _det_limit, _ap_size, _templ_file=None):
                 
                 if len(non_detections)>0:
                     xx,yy,ee=zip(*sorted(non_detections))
-                    ax_sub.errorbar(xx,yy, yerr=[-1.*np.array(ee),[0]*len(ee)], uplims=True, marker='o', color=col[label],label=label,ls='')
+                    ax_sub.errorbar(xx,yy, yerr=[np.abs(np.array(ee)),[0]*len(ee)], uplims=True, marker='o', color=col[label],label=label,ls='')
                 
                 #since I'm plotting detections and non detections separately
                 #this is done only to have a line connecting all epochs
