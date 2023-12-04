@@ -130,21 +130,34 @@ def create_run_files(ra, dec, obstable, outdir='.', phot_radius=5.0 * u.arcsec,
 
         hdu = fits.open(file)
 
-        exptime = hdu[0].header['TSTOP']-hdu[0].header['TSTART']
+        # Calculate exposure time from each image frame
+        exptime = 0.0
+        for i,h in enumerate(hdu):
+            if 'XTENSION' not in h.header.keys(): continue
+            if h.header['XTENSION'].strip()=='IMAGE':
+                time = h.header['TSTOP']-h.header['TSTART']
+                exptime += time
+
         filt = hdu[0].header['FILTER'].strip()
 
         if filt.upper() not in ['U','B','V','UVW1','UVW2','UVM2','W']:
             continue
 
-        w = wcs.WCS(hdu[1].header)
+        in_image = False
+        for i,h in enumerate(hdu):
+            w = wcs.WCS(hdu[1].header)
 
-        naxis1 = hdu[1].header['NAXIS1']
-        naxis2 = hdu[1].header['NAXIS2']
+            naxis1 = hdu[1].header['NAXIS1']
+            naxis2 = hdu[1].header['NAXIS2']
 
-        x,y = w.wcs_world2pix(coord.ra.deg,coord.dec.deg,0)
+            x,y = w.wcs_world2pix(coord.ra.deg,coord.dec.deg,0)
 
-        if x<0 or x>naxis1 or y<0 or y>naxis2:
-            continue
+            if x<0 or x>naxis1 or y<0 or y>naxis2:
+                continue
+            else:
+                in_image = True
+
+        if not in_image: continue
 
         obsid = hdu[0].header['OBS_ID']
         mask = obstable['OBSID']==obsid
@@ -153,7 +166,8 @@ def create_run_files(ra, dec, obstable, outdir='.', phot_radius=5.0 * u.arcsec,
 
         if obs_type=='science':
             science.write(file+'\n')
-            science_data.append({'filter':filt,
+            science_data.append({'file':file,
+                'filter':filt,
                 'exptime':exptime,'mjd':Time(hdu[0].header['DATE-OBS']).mjd})
 
         elif obs_type=='template':
@@ -172,7 +186,14 @@ def create_run_files(ra, dec, obstable, outdir='.', phot_radius=5.0 * u.arcsec,
             else:
                 templates[filt]=t['exptime']
 
+        print('FILE'.ljust(54),
+            'MJD'.ljust(11),
+            'FILTER'.ljust(6),
+            str('EXPTIME').rjust(10),
+            str('TEMP_RATIO').rjust(10),
+            str('TEMPLATE').rjust(18))
         for sci in science_data:
+            file = sci['file']
             filt = sci['filter']
             if filt not in templates.keys():
                 template_exptime = 0.0
@@ -188,10 +209,12 @@ def create_run_files(ra, dec, obstable, outdir='.', phot_radius=5.0 * u.arcsec,
             elif template_fraction > 1.0:
                 template_msg = 'GOOD TEMPLATE'
 
-            print('%5.4f'%sci['mjd'],sci['filter'].ljust(5),
+            print(str(file).ljust(54),
+                str('%5.4f'%sci['mjd']).ljust(11),
+                str(sci['filter']).ljust(6),
                 str('%.3f'%sci['exptime']).rjust(10),
-                '%.3f'%float(template_exptime/sci['exptime']),
-                template_msg)
+                str('%.3f'%float(template_exptime/sci['exptime'])).rjust(10),
+                str(template_msg).rjust(18))
 
     science.close()
     template.close()
